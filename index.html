@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>公司帳務系統</title>
+  <title>紅木盒帳務系統</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; background-color: #f4f5f7; height: 100vh; display: flex; flex-direction: column; }
@@ -27,8 +27,8 @@
     
     /* 左邊商品，右邊數量排版 */
     .row { display: flex; gap: 10px; }
-    .col-product { flex: 1.8; } /* 商品佔比較大 */
-    .col-qty { flex: 1; }     /* 數量佔比較小 */
+    .col-product { flex: 1.8; } 
+    .col-qty { flex: 1; }     
     
     .add-row-btn { width: 100%; padding: 16px; background: transparent; color: #00B900; border: 2px dashed #00B900; border-radius: 12px; font-size: 18px; font-weight: bold; margin-bottom: 20px; cursor: pointer; }
     .discount-box { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 3px 8px rgba(0,0,0,0.05); }
@@ -53,7 +53,6 @@
     <!-- 銷售表單 -->
     <div class="form-content active" id="form-sales">
       <div id="sales-list">
-        <!-- 第一筆商品 (預設) -->
         <div class="item-card sale-item">
           <div class="row">
             <div class="col-product">
@@ -88,7 +87,6 @@
     <!-- 進貨表單 -->
     <div class="form-content" id="form-restock">
       <div id="restock-list">
-        <!-- 第一筆進貨 (預設) -->
         <div class="item-card restock-item">
           <div class="row">
             <div class="col-product">
@@ -117,7 +115,7 @@
   </div>
 
   <script>
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwPz6GtfXQjJJ-3ozBzpxNoAVTZv4GMM4UbQkntd7pA-bhNMM0ZgN6tUCVdcvUZLs0EMg/exec'; 
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbycPaOiDloK_fn_S8RLs7bo-sTU3OCQSFI2pyYbwxZzW5y9KAjQ-NNx6Fsbo1hYuKSsVg/exec'; 
     let userProfile = {};
     let globalProducts = []; 
 
@@ -125,21 +123,22 @@
       if (liff.isLoggedIn()) { 
         liff.getProfile().then(profile => { 
           userProfile = profile; 
-          initAppAndFetchProducts(); // 取得 Profile 後執行
+          initAppAndFetchProducts(); 
         }); 
       } else { 
         liff.login(); 
       }
     });
 
-    // 初始化 App：同時註冊員工 + 抓商品
+    // 初始化 App：破解 CORS 設定
     function initAppAndFetchProducts() {
       const statusBar = document.getElementById('status-bar');
       statusBar.style.display = 'block';
 
       fetch(GAS_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 破解 CORS
+        redirect: 'follow', // 允許轉址
         body: JSON.stringify({ 
           action: 'initApp',
           uid: userProfile.userId,
@@ -151,7 +150,7 @@
         statusBar.style.display = 'none';
         if (res.status === 'success') {
           globalProducts = res.products; 
-          populateAllSelects(); // 填入下拉選單
+          populateAllSelects(); 
         }
       })
       .catch(err => {
@@ -161,7 +160,6 @@
       });
     }
 
-    // 產生選單的 HTML (把 Google Sheet 的商品變成 <option>)
     function getOptionsHtml() {
       let html = '<option value="" disabled selected>請選擇...</option>';
       globalProducts.forEach(p => {
@@ -170,17 +168,15 @@
       return html;
     }
 
-    // 把選單選項塞進畫面中所有的 <select>
     function populateAllSelects() {
       const optionsHtml = getOptionsHtml();
       document.querySelectorAll('.s-name, .r-name').forEach(select => {
-        if (select.options.length <= 1) { // 避免重複塞入
+        if (select.options.length <= 1) { 
           select.innerHTML = optionsHtml;
         }
       });
     }
 
-    // 自動帶入價格 (銷售專用)
     function autoFillPrice(selectElem) {
       const selectedName = selectElem.value;
       const product = globalProducts.find(p => p.name === selectedName);
@@ -191,7 +187,6 @@
       }
     }
 
-    // --- 介面操作 ---
     function switchTab(tabName) {
       document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.form-content').forEach(el => el.classList.remove('active'));
@@ -308,7 +303,8 @@
     function postDataToGas(payload) {
       fetch(GAS_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 破解 CORS
+        redirect: 'follow', // 允許轉址
         body: JSON.stringify(payload)
       })
       .then(res => res.json())
