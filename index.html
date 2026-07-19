@@ -33,7 +33,6 @@
     #form-restock input, #form-restock select { background: #e8f0fe; }
     #form-restock input:focus, #form-restock select:focus { outline: 6px solid #abcbf6; background: #fff; }
 
-    /* 單品小計樣式 */
     .subtotal-val { font-size: 38px; color: #d9534f; font-weight: bold; text-align: right; margin-top: -10px; margin-bottom: 30px; }
 
     .row { display: flex; gap: 20px; }
@@ -54,7 +53,6 @@
     .stats-btn { flex: 1; min-width: 20%; padding: 25px; border-radius: 25px; border: none; background: #f0e4f5; color: #9B59B6; font-size: 32px; font-weight: bold; cursor: pointer; transition: 0.3s;}
     .stats-btn.active { background: #9B59B6; color: #fff; }
     
-    /* 報表日期切換器 */
     .stats-date-control { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 40px; }
     .date-arrow { background: #9B59B6; color: white; border: none; border-radius: 25px; font-size: 45px; padding: 15px 35px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
     .date-arrow:active { transform: scale(0.95); }
@@ -66,6 +64,19 @@
     .stats-val { font-size: 65px; font-weight: bold; color: #9B59B6; line-height: 1.2; }
     .stats-title { font-size: 28px; color: #888; margin-top: 10px;}
     .chart-title { text-align: center; color: #666; margin-top: 0; font-size: 38px; margin-bottom: 40px; }
+
+    /* =========================================
+       新增：員工銷售明細表專屬 CSS (巨無霸可愛風)
+       ========================================= */
+    .table-responsive { width: 100%; overflow-x: auto; border-radius: 25px; border: 3px solid #f0e4f5; }
+    .cute-table { width: 100%; border-collapse: collapse; font-size: 36px; text-align: center; }
+    .cute-table thead { background-color: #9B59B6; color: white; }
+    .cute-table th { padding: 30px 15px; font-weight: bold; }
+    .cute-table td { padding: 30px 15px; border-bottom: 3px solid #f0e4f5; color: #555; }
+    .cute-table tbody tr:last-child td { border-bottom: none; }
+    .cute-table tbody tr:hover td { background-color: #faf3fc; }
+    .emp-name-cell { font-weight: bold; color: #9B59B6; vertical-align: middle; border-right: 3px solid #f0e4f5; background: #fbf8fc; }
+    .emp-total-row td { background-color: #f0e4f5 !important; font-weight: bold; color: #9B59B6; font-size: 38px; }
   </style>
 </head>
 <body>
@@ -108,7 +119,7 @@
       </button>
     </div>
 
-    <!-- 2. 進貨表單 (進貨無須折扣與小計) -->
+    <!-- 2. 進貨表單 -->
     <div class="form-content" id="form-restock">
       <div id="restock-list">
         <div class="item-card restock-item">
@@ -141,7 +152,6 @@
         <button class="stats-btn" onclick="changeTimeframe('year', this)">年</button>
       </div>
 
-      <!-- 切換日期控制區 -->
       <div class="stats-date-control">
         <button class="date-arrow" onclick="moveDate(-1)">◀</button>
         <div class="stats-date-title" id="stats-date-display">載入中...</div>
@@ -152,6 +162,26 @@
         <div class="stats-summary">
           <div><div class="stats-val" id="st-revenue">$0</div><div class="stats-title">總營業額</div></div>
           <div><div class="stats-val" id="st-qty">0</div><div class="stats-title">售出總量</div></div>
+        </div>
+      </div>
+
+      <!-- 新增：員工明細表格 -->
+      <div class="chart-container">
+        <h4 class="chart-title">🧑‍💼 員工銷售明細表</h4>
+        <div class="table-responsive">
+          <table class="cute-table" id="employee-table">
+            <thead>
+              <tr>
+                <th>員工</th>
+                <th>品項</th>
+                <th>數量</th>
+                <th>小計</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- 動態注入內容 -->
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -180,7 +210,6 @@
     let barChartInstance = null;
     let horizontalBarChartInstance = null; 
 
-    // 初始化
     liff.init({ liffId: "2010757215-9etMXJlK" }).then(() => {
       if (liff.isLoggedIn()) { 
         liff.getProfile().then(profile => { 
@@ -231,7 +260,6 @@
       }
     }
 
-    // --- 新增單品小計與總額計算 ---
     function addSaleRow() {
       const html = `<div class="item-card sale-item"><button class="remove-btn" onclick="this.parentElement.remove(); calcTotal();">刪除</button><div class="row"><div class="col-product"><label>商品名稱</label><select class="s-name" onchange="autoFillPrice(this)">${getOptionsHtml()}</select></div><div class="col-qty"><label>數量</label><input type="number" class="s-qty" value="1" inputmode="numeric" oninput="calcTotal()"></div></div><label>金額</label><input type="number" class="s-price" placeholder="輸入單價" inputmode="numeric" oninput="calcTotal()"><div class="subtotal-val">小計: $0</div></div>`;
       document.getElementById('sales-list').insertAdjacentHTML('beforeend', html);
@@ -243,7 +271,7 @@
         let qty = parseInt(item.querySelector('.s-qty').value) || 0;
         let price = parseInt(item.querySelector('.s-price').value) || 0;
         let subtotal = qty * price;
-        item.querySelector('.subtotal-val').innerText = `小計: $${subtotal}`; // 動態更新小計
+        item.querySelector('.subtotal-val').innerText = `小計: $${subtotal}`;
         total += subtotal;
       });
       total -= (parseInt(document.getElementById('s-discount').value) || 0);
@@ -295,7 +323,6 @@
       }).then(res => res.json()).then(data => { alert(data.message); liff.closeWindow(); });
     }
 
-    // --- 日期導航與統計圖表邏輯 ---
     let currentNavDate = new Date();
     let currentTF = 'day';
 
@@ -309,7 +336,7 @@
 
     function changeTimeframe(tf, btnElem) {
       currentTF = tf;
-      currentNavDate = new Date(); // 切換時預設回到今天
+      currentNavDate = new Date();
       document.querySelectorAll('.stats-btn').forEach(btn => btn.classList.remove('active'));
       btnElem.classList.add('active');
       fetchStatsData();
@@ -332,23 +359,23 @@
       if (currentTF === 'day') {
         start = new Date(y, m, d, 0, 0, 0).getTime();
         end = new Date(y, m, d, 23, 59, 59).getTime();
-        displayStr = `${y}/${String(m+1).padStart(2,'0')}/${String(d).padStart(2,'0')}`;
+        displayStr = `📅 ${y}/${String(m+1).padStart(2,'0')}/${String(d).padStart(2,'0')}`;
       } else if (currentTF === 'week') {
         let dayOfWeek = currentNavDate.getDay() || 7; 
         let monday = new Date(y, m, d - dayOfWeek + 1);
         let sunday = new Date(monday.getTime() + 6 * 24 * 60 * 60 * 1000);
         start = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 0, 0, 0).getTime();
         end = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate(), 23, 59, 59).getTime();
-        displayStr = `${monday.getMonth()+1}/${monday.getDate()} ~ ${sunday.getMonth()+1}/${sunday.getDate()}`;
+        displayStr = `📅 ${monday.getMonth()+1}/${monday.getDate()} ~ ${sunday.getMonth()+1}/${sunday.getDate()}`;
       } else if (currentTF === 'month') {
         start = new Date(y, m, 1, 0, 0, 0).getTime();
         let lastDay = new Date(y, m + 1, 0);
         end = new Date(y, m, lastDay.getDate(), 23, 59, 59).getTime();
-        displayStr = `${y} 年 ${m+1} 月`;
+        displayStr = `📅 ${y} 年 ${m+1} 月`;
       } else if (currentTF === 'year') {
         start = new Date(y, 0, 1, 0, 0, 0).getTime();
         end = new Date(y, 11, 31, 23, 59, 59).getTime();
-        displayStr = `${y} 年`;
+        displayStr = `📅 ${y} 年`;
       }
 
       document.getElementById('stats-date-display').innerText = displayStr;
@@ -366,6 +393,44 @@
       document.getElementById('st-revenue').innerText = `$ ${data.totalRevenue.toLocaleString()}`;
       document.getElementById('st-qty').innerText = data.totalQty;
 
+      // === 繪製員工明細表格 ===
+      const tbody = document.querySelector('#employee-table tbody');
+      tbody.innerHTML = '';
+      let empStats = data.employeeStats;
+      let empNames = Object.keys(empStats);
+
+      if (empNames.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="padding: 40px; color:#888;">這段期間無銷售紀錄</td></tr>';
+      } else {
+        empNames.forEach(emp => {
+          let items = empStats[emp].items;
+          let productNames = Object.keys(items);
+          
+          productNames.forEach((pName, index) => {
+            let tr = document.createElement('tr');
+            // 合併儲存格：只有第一個商品顯示員工名稱
+            let empDisplay = (index === 0) ? `<td class="emp-name-cell" rowspan="${productNames.length}">${emp}</td>` : '';
+            tr.innerHTML = `
+              ${empDisplay}
+              <td>${pName}</td>
+              <td>${items[pName].qty}</td>
+              <td>$${items[pName].revenue.toLocaleString()}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+          
+          // 員工個人小計行
+          let trTotal = document.createElement('tr');
+          trTotal.className = 'emp-total-row';
+          trTotal.innerHTML = `
+            <td colspan="2" style="text-align:right;">${emp} 總計：</td>
+            <td colspan="2">$${empStats[emp].totalRevenue.toLocaleString()}</td>
+          `;
+          tbody.appendChild(trTotal);
+        });
+      }
+
+      // === 繪製圖表 ===
       let labels = Object.keys(data.products);
       let revenues = labels.map(l => data.products[l].revenue);
       let qtys = labels.map(l => data.products[l].qty);
@@ -375,28 +440,18 @@
       if(barChartInstance) barChartInstance.destroy();
       if(horizontalBarChartInstance) horizontalBarChartInstance.destroy();
 
-      // 圖表文字終極放大設定
       const hugeFontConfig = { size: 36, weight: 'bold' };
       const tooltipConfig = { titleFont: { size: 38 }, bodyFont: { size: 36 }, padding: 25 };
       const safeTotalQty = data.totalQty || 1; 
 
-      // 1. 橫向百分比圖
       const labelsWithPercent = labels.map((l, i) => `${l} (${((qtys[i] / safeTotalQty) * 100).toFixed(1)}%)`);
       const ctxHBar = document.getElementById('horizontalBarChart').getContext('2d');
       horizontalBarChartInstance = new Chart(ctxHBar, {
         type: 'bar',
         data: { labels: labelsWithPercent, datasets: [{ data: qtys.map(q => (q / safeTotalQty * 100).toFixed(1)), backgroundColor: dynamicColors, borderRadius: 20 }] },
-        options: { 
-          indexAxis: 'y', 
-          plugins: { legend: { display: false }, tooltip: tooltipConfig },
-          scales: { 
-            x: { ticks: { font: hugeFontConfig } }, 
-            y: { ticks: { font: hugeFontConfig } } 
-          } 
-        }
+        options: { indexAxis: 'y', plugins: { legend: { display: false }, tooltip: tooltipConfig }, scales: { x: { ticks: { font: hugeFontConfig } }, y: { ticks: { font: hugeFontConfig } } } }
       });
 
-      // 2. 圓餅圖
       const ctxPie = document.getElementById('pieChart').getContext('2d');
       pieChartInstance = new Chart(ctxPie, {
         type: 'doughnut', 
@@ -404,18 +459,11 @@
         options: { plugins: { legend: { position: 'bottom', labels: { font: hugeFontConfig, padding: 30 } }, tooltip: tooltipConfig } }
       });
 
-      // 3. 直條圖
       const ctxBar = document.getElementById('barChart').getContext('2d');
       barChartInstance = new Chart(ctxBar, {
         type: 'bar',
         data: { labels: labels, datasets: [{ label: '售出數量', data: qtys, backgroundColor: dynamicColors, borderRadius: 20 }] },
-        options: { 
-          scales: { 
-            y: { beginAtZero: true, ticks: { stepSize: 1, font: hugeFontConfig } }, 
-            x: { ticks: { font: hugeFontConfig } } 
-          }, 
-          plugins: { legend: { display: false }, tooltip: tooltipConfig } 
-        }
+        options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: hugeFontConfig } }, x: { ticks: { font: hugeFontConfig } } }, plugins: { legend: { display: false }, tooltip: tooltipConfig } }
       });
     }
   </script>
