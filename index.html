@@ -2,52 +2,88 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>新增銷售紀錄</title>
+  <title>公司帳務系統</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    body { font-family: 'Arial', sans-serif; padding: 20px; background-color: #f4f5f7; }
-    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;}
-    .btn { width: 100%; padding: 12px; background: #00B900; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: 0.3s;}
-    .btn:active { transform: scale(0.98); }
+    /* 全新 APP 風格設計 */
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background-color: #f0f2f5; margin: 0; }
+    .container { background: white; border-radius: 16px; box-shadow: 0 8px 15px rgba(0,0,0,0.05); overflow: hidden; }
     
-    /* 載入動畫 */
-    .loader { display: none; border: 4px solid #f3f3f3; border-top: 4px solid #00B900; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto; }
+    /* 雙分頁標籤 */
+    .tabs { display: flex; background: #e4e6eb; }
+    .tab { flex: 1; text-align: center; padding: 15px 0; font-weight: bold; color: #666; cursor: pointer; transition: 0.3s; }
+    .tab.active { background: white; color: #00B900; border-bottom: 3px solid #00B900; }
+    
+    /* 表單區塊 */
+    .form-content { padding: 20px; display: none; }
+    .form-content.active { display: block; }
+    
+    label { font-size: 14px; color: #555; font-weight: bold; margin-bottom: 5px; display: block; }
+    /* 加大輸入框與強制數字鍵盤優化 */
+    input, select { width: 100%; padding: 15px; margin-bottom: 15px; border: 1.5px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; background: #fafafa;}
+    input:focus { border-color: #00B900; outline: none; background: white; }
+    
+    .btn { width: 100%; padding: 16px; background: #00B900; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s;}
+    .btn:active { transform: scale(0.96); }
+    
+    .loader { display: none; border: 4px solid #f3f3f3; border-top: 4px solid #00B900; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite; margin: 0 auto; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h2 style="text-align: center; color: #333;">📦 新增銷售</h2>
-    <form id="saleForm">
-      <label>商品名稱 (可下拉或自填)</label>
-      <input type="text" id="productName" list="productList" required placeholder="例如：拿鐵咖啡">
-      <datalist id="productList">
-        <option value="商品A">
-        <option value="商品B">
-      </datalist>
 
+  <div class="container">
+    <!-- 分頁按鈕 -->
+    <div class="tabs">
+      <div class="tab active" id="tab-sales" onclick="switchTab('sales')">📦 銷售記帳</div>
+      <div class="tab" id="tab-restock" onclick="switchTab('restock')">📥 進貨盤點</div>
+    </div>
+
+    <!-- 頁面 1：銷售表單 -->
+    <div class="form-content active" id="form-sales">
+      <label>商品名稱</label>
+      <input type="text" id="s_product" list="productList" placeholder="選擇或輸入商品">
+      
       <label>銷售數量</label>
-      <input type="number" id="qty" value="1" min="1" required>
+      <!-- inputmode="numeric" 強制叫出九宮格數字鍵盤 -->
+      <input type="number" id="s_qty" value="1" inputmode="numeric" pattern="[0-9]*">
+      
+      <label>單件實售金額</label>
+      <input type="number" id="s_price" placeholder="輸入單價" inputmode="numeric" pattern="[0-9]*">
+      
+      <label>總折扣 (無則填 0)</label>
+      <input type="number" id="s_discount" value="0" inputmode="numeric" pattern="[0-9]*">
+      
+      <button class="btn" id="btn-sales" onclick="submitForm('addSale')">確認結帳</button>
+      <div class="loader" id="loader-sales"></div>
+    </div>
 
-      <label>單件設定金額</label>
-      <input type="number" id="price" required placeholder="自訂金額">
+    <!-- 頁面 2：進貨表單 -->
+    <div class="form-content" id="form-restock">
+      <label>進貨商品</label>
+      <input type="text" id="r_product" list="productList" placeholder="選擇或輸入商品">
+      
+      <label>進貨數量</label>
+      <input type="number" id="r_qty" value="1" inputmode="numeric" pattern="[0-9]*">
+      
+      <label>總進貨成本</label>
+      <input type="number" id="r_cost" placeholder="這批進貨花多少錢" inputmode="numeric" pattern="[0-9]*">
+      
+      <button class="btn" id="btn-restock" style="background:#0066FF;" onclick="submitForm('addRestock')">新增庫存</button>
+      <div class="loader" id="loader-restock"></div>
+    </div>
 
-      <label>總折扣金額 (若無則填0)</label>
-      <input type="number" id="discount" value="0" required>
-
-      <div style="text-align: center; margin-top: 20px;">
-        <button type="button" class="btn" id="submitBtn" onclick="submitData()">確認結帳</button>
-        <div class="loader" id="loader"></div>
-      </div>
-    </form>
+    <!-- 共用下拉選單資料 -->
+    <datalist id="productList">
+      <option value="拿鐵咖啡">
+      <option value="美式咖啡">
+    </datalist>
   </div>
 
   <script>
     let userProfile = {};
 
-    // 1. 初始化 LIFF
-    liff.init({ liffId: "2010757215-9etMXJlK" }).then(() => {
+    liff.init({ liffId: "你的_LIFF_ID" }).then(() => {
       if (liff.isLoggedIn()) {
         liff.getProfile().then(profile => { userProfile = profile; });
       } else {
@@ -55,22 +91,44 @@
       }
     });
 
-    // 2. 送出資料
-    function submitData() {
-      document.getElementById('submitBtn').style.display = 'none';
-      document.getElementById('loader').style.display = 'block';
+    // 處理分頁切換邏輯
+    function switchTab(tabName) {
+      document.getElementById('tab-sales').classList.remove('active');
+      document.getElementById('tab-restock').classList.remove('active');
+      document.getElementById('form-sales').classList.remove('active');
+      document.getElementById('form-restock').classList.remove('active');
 
-      const payload = {
-        action: 'addSale',
-        uid: userProfile.userId || 'test_uid',
-        empName: userProfile.displayName || '員工',
-        productName: document.getElementById('productName').value,
-        qty: parseInt(document.getElementById('qty').value),
-        price: parseInt(document.getElementById('price').value),
-        discount: parseInt(document.getElementById('discount').value)
-      };
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+      document.getElementById(`form-${tabName}`).classList.add('active');
+    }
 
-      // 呼叫 GAS doPost
+    // 整合送出邏輯 (區分是銷售還是進貨)
+    function submitForm(actionType) {
+      let payload = { action: actionType, uid: userProfile.userId || 'test', empName: userProfile.displayName || '測試員' };
+      let btnId, loaderId;
+
+      if (actionType === 'addSale') {
+        btnId = 'btn-sales'; loaderId = 'loader-sales';
+        payload.productName = document.getElementById('s_product').value;
+        payload.qty = parseInt(document.getElementById('s_qty').value);
+        payload.price = parseInt(document.getElementById('s_price').value);
+        payload.discount = parseInt(document.getElementById('s_discount').value) || 0;
+      } else {
+        btnId = 'btn-restock'; loaderId = 'loader-restock';
+        payload.productName = document.getElementById('r_product').value;
+        payload.qty = parseInt(document.getElementById('r_qty').value);
+        payload.cost = parseInt(document.getElementById('r_cost').value);
+      }
+
+      // 防呆：確認名稱與金額有填
+      if(!payload.productName || isNaN(payload.qty)) {
+        alert("請確認欄位都有填寫完整！");
+        return;
+      }
+
+      document.getElementById(btnId).style.display = 'none';
+      document.getElementById(loaderId).style.display = 'block';
+
       fetch('你的_GAS_WebAPP_URL', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -79,9 +137,8 @@
       .then(res => res.json())
       .then(data => {
         if(data.status === 'success') {
-          // 成功動畫或訊息
-          alert(`✅ 結帳成功！總金額：${data.total} 元`);
-          liff.closeWindow(); // 記帳完自動關閉 LIFF 視窗
+          alert(data.message);
+          liff.closeWindow(); 
         }
       });
     }
