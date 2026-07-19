@@ -4,96 +4,99 @@
   <meta charset="utf-8">
   <title>紅木盒帳務系統</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <!-- 引入 Chart.js 用於繪製圖表 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 0; background-color: #f4f5f7; height: 100vh; display: flex; flex-direction: column; }
+    /* 記帳雞風格：粉橘色背景與柔和圓角 */
+    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #fbd6d2; height: 100vh; display: flex; flex-direction: column; color: #4a4a4a; }
     
-    /* 頂部載入狀態 */
-    #status-bar { text-align: center; padding: 12px; background: #fff3cd; color: #856404; font-size: 16px; font-weight: bold; display: none; }
+    #status-bar { text-align: center; padding: 10px; background: #fff3cd; color: #856404; font-size: 14px; font-weight: bold; display: none; }
     
-    .tabs { display: flex; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.08); z-index: 10; flex-shrink: 0;}
-    .tab { flex: 1; text-align: center; padding: 20px 0; font-weight: bold; color: #888; cursor: pointer; font-size: 18px; }
-    .tab.active { color: #00B900; border-bottom: 4px solid #00B900; }
+    /* 頂部分頁：仿記帳雞紅字風格 */
+    .tabs { display: flex; background: #fbd6d2; padding-top: 10px; z-index: 10; flex-shrink: 0; }
+    .tab { flex: 1; text-align: center; padding: 15px 0; font-weight: bold; color: #666; cursor: pointer; font-size: 18px; transition: 0.3s; }
+    .tab.active { color: #d9534f; border-bottom: 3px solid #d9534f; }
     
-    .form-wrapper { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 40px; }
+    .form-wrapper { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 40px; background: #fdf5f4; border-top-left-radius: 20px; border-top-right-radius: 20px; margin-top: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
     .form-content { display: none; }
     .form-content.active { display: block; }
     
-    .item-card { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 3px 8px rgba(0,0,0,0.05); position: relative; border: 1px solid #eee; }
-    .remove-btn { position: absolute; top: 10px; right: 10px; background: #ffebee; color: #d32f2f; border: none; border-radius: 6px; padding: 6px 12px; font-size: 14px; font-weight: bold; cursor: pointer; }
+    /* 卡片設計：圓潤、柔和陰影 */
+    .item-card { background: #fff; border-radius: 20px; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(217,83,79,0.1); position: relative; }
+    .remove-btn { position: absolute; top: 12px; right: 12px; background: #ffebee; color: #d32f2f; border: none; border-radius: 8px; padding: 6px 12px; font-size: 13px; font-weight: bold; cursor: pointer; }
     
-    label { font-size: 15px; color: #555; font-weight: bold; margin-bottom: 8px; display: block; }
-    input, select { width: 100%; padding: 15px; margin-bottom: 12px; border: 2px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 18px; background: #fafafa; }
-    input:focus, select:focus { border-color: #00B900; outline: none; background: white; }
+    label { font-size: 14px; color: #d9534f; font-weight: bold; margin-bottom: 8px; display: block; }
     
-    /* 左邊商品，右邊數量排版 */
+    /* 輸入框：仿記帳雞黃色風格 */
+    input, select { width: 100%; padding: 15px; margin-bottom: 12px; border: none; border-radius: 15px; box-sizing: border-box; font-size: 18px; background: #fcede3; color: #333; font-weight: bold; }
+    input:focus, select:focus { outline: 2px solid #f2b3a8; background: #fff; }
+    
     .row { display: flex; gap: 10px; }
     .col-product { flex: 1.8; } 
     .col-qty { flex: 1; }     
     
-    .add-row-btn { width: 100%; padding: 16px; background: transparent; color: #00B900; border: 2px dashed #00B900; border-radius: 12px; font-size: 18px; font-weight: bold; margin-bottom: 20px; cursor: pointer; }
-    .discount-box { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 3px 8px rgba(0,0,0,0.05); }
+    .add-row-btn { width: 100%; padding: 16px; background: transparent; color: #d9534f; border: 2px dashed #f2b3a8; border-radius: 15px; font-size: 16px; font-weight: bold; margin-bottom: 20px; cursor: pointer; }
+    .discount-box { background: #fff; border-radius: 20px; padding: 18px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(217,83,79,0.1); }
     
-    .btn-submit { width: 100%; padding: 20px; background: #00B900; color: white; border: none; border-radius: 12px; font-size: 22px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; }
-    .btn-submit.blue { background: #0066FF; }
+    /* 結帳大按鈕：柔和藍色 (記帳雞儲存按鈕色) */
+    .btn-submit { width: 100%; padding: 18px; background: #92bce8; color: white; border: none; border-radius: 20px; font-size: 20px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(146,188,232,0.4); }
     
-    .loader { display: none; border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #fff; border-radius: 50%; width: 22px; height: 22px; animation: spin 1s linear infinite; margin-left: 10px;}
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    /* 圖表區塊專屬 CSS */
+    .stats-nav { display: flex; gap: 10px; margin-bottom: 20px; }
+    .stats-btn { flex: 1; padding: 10px; border-radius: 10px; border: none; background: #fcede3; color: #d9534f; font-weight: bold; cursor: pointer; }
+    .stats-btn.active { background: #d9534f; color: #fff; }
+    .chart-container { background: #fff; padding: 15px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(217,83,79,0.1); }
+    .stats-summary { display: flex; justify-content: space-between; margin-bottom: 10px; }
+    .stats-summary div { text-align: center; }
+    .stats-val { font-size: 24px; font-weight: bold; color: #d9534f; }
+    .stats-title { font-size: 12px; color: #888; }
   </style>
 </head>
 <body>
 
-  <div id="status-bar">🔄 系統初始化中，請稍候...</div>
+  <div id="status-bar">🔄 系統初始化中...</div>
 
   <div class="tabs">
-    <div class="tab active" id="tab-sales" onclick="switchTab('sales')">📦 銷售結帳</div>
-    <div class="tab" id="tab-restock" onclick="switchTab('restock')">📥 進貨盤點</div>
+    <div class="tab active" onclick="switchTab('sales', this)">支出/銷售</div>
+    <div class="tab" onclick="switchTab('restock', this)">進貨</div>
+    <div class="tab" onclick="switchTab('stats', this)">📊 報表</div>
   </div>
 
   <div class="form-wrapper">
-    <!-- 銷售表單 -->
+    <!-- 1. 銷售表單 -->
     <div class="form-content active" id="form-sales">
       <div id="sales-list">
         <div class="item-card sale-item">
           <div class="row">
             <div class="col-product">
               <label>商品名稱</label>
-              <select class="s-name" onchange="autoFillPrice(this)">
-                <option value="" disabled selected>請選擇...</option>
-              </select>
+              <select class="s-name" onchange="autoFillPrice(this)"></select>
             </div>
             <div class="col-qty">
               <label>數量</label>
               <input type="number" class="s-qty" value="1" inputmode="numeric" oninput="calcTotal()">
             </div>
           </div>
-          <label>單件實售金額</label>
-          <input type="number" class="s-price" placeholder="輸入單價" inputmode="numeric" oninput="calcTotal()">
+          <label>金額</label>
+          <input type="number" class="s-price" placeholder="輸入金額" inputmode="numeric" oninput="calcTotal()">
         </div>
       </div>
-      
-      <button class="add-row-btn" onclick="addSaleRow()">＋ 新增另一項商品</button>
-
+      <button class="add-row-btn" onclick="addSaleRow()">＋ 新增商品</button>
       <div class="discount-box">
-        <label>整筆訂單總折扣 (若無則填 0)</label>
+        <label>折扣 (無則 0)</label>
         <input type="number" id="s-discount" value="0" inputmode="numeric" oninput="calcTotal()" style="margin-bottom:0;">
       </div>
-
-      <button class="btn-submit" id="btn-sales" onclick="submitSales()">
-        <span id="sales-total-text">結帳 (總計 $0)</span>
-        <div class="loader" id="loader-sales"></div>
-      </button>
+      <button class="btn-submit" onclick="submitSales()"><span id="sales-total-text">儲存 (總計 $0)</span></button>
     </div>
 
-    <!-- 進貨表單 -->
+    <!-- 2. 進貨表單 -->
     <div class="form-content" id="form-restock">
       <div id="restock-list">
         <div class="item-card restock-item">
           <div class="row">
             <div class="col-product">
               <label>進貨商品</label>
-              <select class="r-name">
-                <option value="" disabled selected>請選擇...</option>
-              </select>
+              <select class="r-name"></select>
             </div>
             <div class="col-qty">
               <label>數量</label>
@@ -104,13 +107,34 @@
           <input type="number" class="r-cost" placeholder="輸入總成本" inputmode="numeric" oninput="calcRestockTotal()">
         </div>
       </div>
+      <button class="add-row-btn" onclick="addRestockRow()">＋ 新增進貨</button>
+      <button class="btn-submit" style="background:#f2b3a8;" onclick="submitRestock()"><span id="restock-total-text">儲存進貨 ($0)</span></button>
+    </div>
+
+    <!-- 3. 統計報表表單 (全新功能) -->
+    <div class="form-content" id="form-stats">
+      <div class="stats-nav">
+        <button class="stats-btn active" onclick="loadStats('day', this)">日銷售</button>
+        <button class="stats-btn" onclick="loadStats('week', this)">週銷售</button>
+        <button class="stats-btn" onclick="loadStats('month', this)">月銷售</button>
+      </div>
+
+      <div class="chart-container">
+        <div class="stats-summary">
+          <div><div class="stats-val" id="st-revenue">$0</div><div class="stats-title">總營業額</div></div>
+          <div><div class="stats-val" id="st-qty">0</div><div class="stats-title">售出總量</div></div>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h4 style="text-align:center; color:#666; margin-top:0;">熱銷商品佔比 (金額)</h4>
+        <canvas id="pieChart"></canvas>
+      </div>
       
-      <button class="add-row-btn" onclick="addRestockRow()" style="color:#0066FF; border-color:#0066FF;">＋ 新增進貨品項</button>
-      
-      <button class="btn-submit blue" id="btn-restock" onclick="submitRestock()">
-        <span id="restock-total-text">新增庫存 (總成本 $0)</span>
-        <div class="loader" id="loader-restock"></div>
-      </button>
+      <div class="chart-container">
+        <h4 style="text-align:center; color:#666; margin-top:0;">銷售數量統計</h4>
+        <canvas id="barChart"></canvas>
+      </div>
     </div>
   </div>
 
@@ -118,6 +142,8 @@
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbycPaOiDloK_fn_S8RLs7bo-sTU3OCQSFI2pyYbwxZzW5y9KAjQ-NNx6Fsbo1hYuKSsVg/exec'; 
     let userProfile = {};
     let globalProducts = []; 
+    let pieChartInstance = null;
+    let barChartInstance = null;
 
     liff.init({ liffId: "2010757215-9etMXJlK" }).then(() => {
       if (liff.isLoggedIn()) { 
@@ -125,105 +151,67 @@
           userProfile = profile; 
           initAppAndFetchProducts(); 
         }); 
-      } else { 
-        liff.login(); 
-      }
+      } else { liff.login(); }
     });
 
-    // 初始化 App：破解 CORS 設定
     function initAppAndFetchProducts() {
-      const statusBar = document.getElementById('status-bar');
-      statusBar.style.display = 'block';
-
       fetch(GAS_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 破解 CORS
-        redirect: 'follow', // 允許轉址
-        body: JSON.stringify({ 
-          action: 'initApp',
-          uid: userProfile.userId,
-          empName: userProfile.displayName
-        })
-      })
-      .then(res => res.json())
-      .then(res => {
-        statusBar.style.display = 'none';
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        redirect: 'follow',
+        body: JSON.stringify({ action: 'initApp', uid: userProfile.userId, empName: userProfile.displayName })
+      }).then(res => res.json()).then(res => {
         if (res.status === 'success') {
           globalProducts = res.products; 
           populateAllSelects(); 
         }
-      })
-      .catch(err => {
-        statusBar.innerText = "❌ 無法連線，請確認 GAS 已部署為新版本";
-        statusBar.style.background = "#f8d7da";
-        statusBar.style.color = "#721c24";
       });
     }
 
     function getOptionsHtml() {
       let html = '<option value="" disabled selected>請選擇...</option>';
-      globalProducts.forEach(p => {
-        html += `<option value="${p.name}">${p.name}</option>`;
-      });
+      globalProducts.forEach(p => { html += `<option value="${p.name}">${p.name}</option>`; });
       return html;
     }
 
     function populateAllSelects() {
-      const optionsHtml = getOptionsHtml();
-      document.querySelectorAll('.s-name, .r-name').forEach(select => {
-        if (select.options.length <= 1) { 
-          select.innerHTML = optionsHtml;
-        }
+      const opts = getOptionsHtml();
+      document.querySelectorAll('.s-name, .r-name').forEach(s => {
+        if (s.options.length <= 1) s.innerHTML = opts;
       });
     }
 
     function autoFillPrice(selectElem) {
-      const selectedName = selectElem.value;
-      const product = globalProducts.find(p => p.name === selectedName);
-      if (product) {
-        const row = selectElem.closest('.item-card');
-        row.querySelector('.s-price').value = product.price;
-        calcTotal();
+      const p = globalProducts.find(x => x.name === selectElem.value);
+      if (p) { selectElem.closest('.item-card').querySelector('.s-price').value = p.price; calcTotal(); }
+    }
+
+    // --- 切換 Tab ---
+    function switchTab(tabName, elem) {
+      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.form-content').forEach(el => el.classList.remove('active'));
+      elem.classList.add('active');
+      document.getElementById(`form-${tabName}`).classList.add('active');
+
+      // 如果切換到統計報表，自動載入今日資料
+      if(tabName === 'stats') {
+        loadStats('day', document.querySelector('.stats-btn'));
       }
     }
 
-    function switchTab(tabName) {
-      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.form-content').forEach(el => el.classList.remove('active'));
-      document.getElementById(`tab-${tabName}`).classList.add('active');
-      document.getElementById(`form-${tabName}`).classList.add('active');
-    }
-
+    // --- 表單增減與計算 (沿用前版邏輯) ---
     function addSaleRow() {
-      const html = `
-        <div class="item-card sale-item">
-          <button class="remove-btn" onclick="this.parentElement.remove(); calcTotal();">刪除</button>
-          <div class="row">
-            <div class="col-product">
-              <label>商品名稱</label>
-              <select class="s-name" onchange="autoFillPrice(this)">${getOptionsHtml()}</select>
-            </div>
-            <div class="col-qty">
-              <label>數量</label>
-              <input type="number" class="s-qty" value="1" inputmode="numeric" oninput="calcTotal()">
-            </div>
-          </div>
-          <label>單件實售金額</label>
-          <input type="number" class="s-price" placeholder="輸入單價" inputmode="numeric" oninput="calcTotal()">
-        </div>`;
+      const html = `<div class="item-card sale-item"><button class="remove-btn" onclick="this.parentElement.remove(); calcTotal();">刪除</button><div class="row"><div class="col-product"><label>商品名稱</label><select class="s-name" onchange="autoFillPrice(this)">${getOptionsHtml()}</select></div><div class="col-qty"><label>數量</label><input type="number" class="s-qty" value="1" inputmode="numeric" oninput="calcTotal()"></div></div><label>金額</label><input type="number" class="s-price" placeholder="輸入單價" inputmode="numeric" oninput="calcTotal()"></div>`;
       document.getElementById('sales-list').insertAdjacentHTML('beforeend', html);
     }
 
     function calcTotal() {
       let total = 0;
       document.querySelectorAll('.sale-item').forEach(item => {
-        let qty = parseInt(item.querySelector('.s-qty').value) || 0;
-        let price = parseInt(item.querySelector('.s-price').value) || 0;
-        total += (qty * price);
+        total += (parseInt(item.querySelector('.s-qty').value) || 0) * (parseInt(item.querySelector('.s-price').value) || 0);
       });
-      let discount = parseInt(document.getElementById('s-discount').value) || 0;
-      total -= discount;
-      document.getElementById('sales-total-text').innerText = `結帳 (總計 $${Math.max(0, total)})`;
+      total -= (parseInt(document.getElementById('s-discount').value) || 0);
+      document.getElementById('sales-total-text').innerText = `儲存 (總計 $${Math.max(0, total)})`;
     }
 
     function submitSales() {
@@ -234,48 +222,24 @@
         let price = parseInt(item.querySelector('.s-price').value) || 0;
         if(name && qty > 0) items.push({ productName: name, qty: qty, price: price });
       });
-
-      if (items.length === 0) return alert("請至少完整選擇一項商品！");
-
-      document.getElementById('sales-total-text').style.display = 'none';
-      document.getElementById('loader-sales').style.display = 'block';
-
-      const payload = {
-        action: 'addSale',
-        uid: userProfile.userId,
-        empName: userProfile.displayName,
-        discount: parseInt(document.getElementById('s-discount').value) || 0,
-        items: items
-      };
-      postDataToGas(payload);
+      if (items.length === 0) return alert("請完整選擇商品！");
+      document.getElementById('sales-total-text').innerText = "處理中...";
+      
+      fetch(GAS_URL, {
+        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow',
+        body: JSON.stringify({ action: 'addSale', uid: userProfile.userId, empName: userProfile.displayName, discount: parseInt(document.getElementById('s-discount').value)||0, items: items })
+      }).then(res => res.json()).then(data => { alert(data.message); liff.closeWindow(); });
     }
 
     function addRestockRow() {
-      const html = `
-        <div class="item-card restock-item">
-          <button class="remove-btn" onclick="this.parentElement.remove(); calcRestockTotal();">刪除</button>
-          <div class="row">
-            <div class="col-product">
-              <label>進貨商品</label>
-              <select class="r-name">${getOptionsHtml()}</select>
-            </div>
-            <div class="col-qty">
-              <label>數量</label>
-              <input type="number" class="r-qty" value="1" inputmode="numeric" oninput="calcRestockTotal()">
-            </div>
-          </div>
-          <label>進貨總成本</label>
-          <input type="number" class="r-cost" placeholder="輸入總成本" inputmode="numeric" oninput="calcRestockTotal()">
-        </div>`;
+      const html = `<div class="item-card restock-item"><button class="remove-btn" onclick="this.parentElement.remove(); calcRestockTotal();">刪除</button><div class="row"><div class="col-product"><label>進貨商品</label><select class="r-name">${getOptionsHtml()}</select></div><div class="col-qty"><label>數量</label><input type="number" class="r-qty" value="1" inputmode="numeric" oninput="calcRestockTotal()"></div></div><label>進貨總成本</label><input type="number" class="r-cost" placeholder="輸入總成本" inputmode="numeric" oninput="calcRestockTotal()"></div>`;
       document.getElementById('restock-list').insertAdjacentHTML('beforeend', html);
     }
 
     function calcRestockTotal() {
       let total = 0;
-      document.querySelectorAll('.restock-item').forEach(item => {
-        total += parseInt(item.querySelector('.r-cost').value) || 0;
-      });
-      document.getElementById('restock-total-text').innerText = `新增庫存 (總成本 $${total})`;
+      document.querySelectorAll('.restock-item').forEach(item => { total += parseInt(item.querySelector('.r-cost').value) || 0; });
+      document.getElementById('restock-total-text').innerText = `儲存進貨 ($${total})`;
     }
 
     function submitRestock() {
@@ -286,33 +250,67 @@
         let cost = parseInt(item.querySelector('.r-cost').value) || 0;
         if(name && qty > 0) items.push({ productName: name, qty: qty, cost: cost });
       });
-
-      if (items.length === 0) return alert("請至少完整選擇一項進貨！");
-      document.getElementById('restock-total-text').style.display = 'none';
-      document.getElementById('loader-restock').style.display = 'block';
-
-      const payload = {
-        action: 'addRestock',
-        uid: userProfile.userId,
-        empName: userProfile.displayName,
-        items: items
-      };
-      postDataToGas(payload);
+      if (items.length === 0) return alert("請完整選擇進貨！");
+      document.getElementById('restock-total-text').innerText = "處理中...";
+      
+      fetch(GAS_URL, {
+        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow',
+        body: JSON.stringify({ action: 'addRestock', uid: userProfile.userId, empName: userProfile.displayName, items: items })
+      }).then(res => res.json()).then(data => { alert(data.message); liff.closeWindow(); });
     }
 
-    function postDataToGas(payload) {
+    // --- 統計報表邏輯 (Chart.js) ---
+    function loadStats(timeframe, btnElem) {
+      document.querySelectorAll('.stats-btn').forEach(btn => btn.classList.remove('active'));
+      btnElem.classList.add('active');
+      
+      document.getElementById('st-revenue').innerText = "讀取中...";
+
       fetch(GAS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 破解 CORS
-        redirect: 'follow', // 允許轉址
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(data => {
-        if(data.status === 'success') {
-          alert(data.message);
-          liff.closeWindow(); 
+        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow',
+        body: JSON.stringify({ action: 'getStats', timeframe: timeframe })
+      }).then(res => res.json()).then(res => {
+        if(res.status === 'success') {
+          renderCharts(res.data);
         }
+      });
+    }
+
+    function renderCharts(data) {
+      document.getElementById('st-revenue').innerText = `$ ${data.totalRevenue.toLocaleString()}`;
+      document.getElementById('st-qty').innerText = data.totalQty;
+
+      let labels = Object.keys(data.products);
+      let revenues = labels.map(l => data.products[l].revenue);
+      let qtys = labels.map(l => data.products[l].qty);
+
+      // 銷毀舊圖表避免重疊
+      if(pieChartInstance) pieChartInstance.destroy();
+      if(barChartInstance) barChartInstance.destroy();
+
+      // 柔和配色設定
+      const colors = ['#f2b3a8', '#92bce8', '#ffdfba', '#b5ead7', '#ffb7b2', '#e2f0cb'];
+
+      // 畫圓餅圖 (金額佔比)
+      const ctxPie = document.getElementById('pieChart').getContext('2d');
+      pieChartInstance = new Chart(ctxPie, {
+        type: 'pie',
+        data: {
+          labels: labels,
+          datasets: [{ data: revenues, backgroundColor: colors }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } }
+      });
+
+      // 畫長條圖 (數量統計)
+      const ctxBar = document.getElementById('barChart').getContext('2d');
+      barChartInstance = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{ label: '售出數量', data: qtys, backgroundColor: '#92bce8', borderRadius: 5 }]
+        },
+        options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
       });
     }
   </script>
