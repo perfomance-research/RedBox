@@ -6,73 +6,66 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* =========================================
-       終極 3 倍放大版 CSS (專為 Full 螢幕/平板設計)
-       ========================================= */
     body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #fbd6d2; height: 100vh; display: flex; flex-direction: column; color: #4a4a4a; }
     
     #status-bar { text-align: center; padding: 25px; background: #fff3cd; color: #856404; font-size: 28px; font-weight: bold; display: none; }
     
-    /* 頂部分頁：超大點擊區塊 */
     .tabs { display: flex; background: #fbd6d2; padding-top: 15px; z-index: 10; flex-shrink: 0; }
     .tab { flex: 1; text-align: center; padding: 35px 0; font-weight: bold; color: #888; cursor: pointer; font-size: 38px; transition: 0.3s; border-bottom: 8px solid transparent; }
-    
     #tab-sales.active { color: #d9534f; border-bottom-color: #d9534f; }
     #tab-restock.active { color: #4A90E2; border-bottom-color: #4A90E2; }
     #tab-stats.active { color: #9B59B6; border-bottom-color: #9B59B6; }
     
-    /* 內容區塊 */
     .form-wrapper { flex: 1; overflow-y: auto; padding: 30px; padding-bottom: 80px; background: #fdf5f4; border-top-left-radius: 40px; border-top-right-radius: 40px; box-shadow: 0 -4px 20px rgba(0,0,0,0.08); }
     .form-content { display: none; }
     .form-content.active { display: block; }
     
-    /* 卡片設計終極加大 */
     .item-card { background: #fff; border-radius: 40px; padding: 40px; margin-bottom: 40px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); position: relative; }
     .remove-btn { position: absolute; top: 25px; right: 25px; background: #ffebee; color: #d32f2f; border: none; border-radius: 15px; padding: 18px 28px; font-size: 26px; font-weight: bold; cursor: pointer; }
     
-    /* 標題與輸入框終極放大 */
     label { font-size: 32px; color: #666; font-weight: bold; margin-bottom: 20px; display: block; }
     #form-sales label { color: #d9534f; }
     #form-restock label { color: #4A90E2; }
     
-    /* 輸入框與下拉選單 */
     input, select { width: 100%; padding: 35px; margin-bottom: 30px; border: none; border-radius: 30px; box-sizing: border-box; font-size: 42px; background: #fcede3; color: #333; font-weight: bold; }
     input:focus, select:focus { outline: 6px solid #f2b3a8; background: #fff; }
     
     #form-restock input, #form-restock select { background: #e8f0fe; }
     #form-restock input:focus, #form-restock select:focus { outline: 6px solid #abcbf6; background: #fff; }
 
+    /* 單品小計樣式 */
+    .subtotal-val { font-size: 38px; color: #d9534f; font-weight: bold; text-align: right; margin-top: -10px; margin-bottom: 30px; }
+
     .row { display: flex; gap: 20px; }
     .col-product { flex: 1.8; } 
     .col-qty { flex: 1; }     
     
-    /* 新增按鈕加大 */
     .add-row-btn { width: 100%; padding: 35px; background: transparent; border: 5px dashed; border-radius: 35px; font-size: 36px; font-weight: bold; margin-bottom: 40px; cursor: pointer; }
     #form-sales .add-row-btn { color: #d9534f; border-color: #f2b3a8; }
     #form-restock .add-row-btn { color: #4A90E2; border-color: #abcbf6; }
 
     .discount-box { background: #fff; border-radius: 40px; padding: 40px; margin-bottom: 40px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
     
-    /* 結帳大按鈕 */
     .btn-submit { width: 100%; padding: 45px; color: white; border: none; border-radius: 40px; font-size: 48px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 8px 25px rgba(0,0,0,0.15); transition: 0.2s; }
     .btn-submit:active { transform: scale(0.97); }
     
-    /* 報表區塊終極放大 */
-    .stats-nav { display: flex; gap: 20px; margin-bottom: 40px; }
-    .stats-btn { flex: 1; padding: 25px; border-radius: 25px; border: none; background: #f0e4f5; color: #9B59B6; font-size: 32px; font-weight: bold; cursor: pointer; transition: 0.3s;}
+    /* 報表區塊 */
+    .stats-nav { display: flex; gap: 15px; margin-bottom: 40px; flex-wrap: wrap; }
+    .stats-btn { flex: 1; min-width: 20%; padding: 25px; border-radius: 25px; border: none; background: #f0e4f5; color: #9B59B6; font-size: 32px; font-weight: bold; cursor: pointer; transition: 0.3s;}
     .stats-btn.active { background: #9B59B6; color: #fff; }
     
+    /* 報表日期切換器 */
+    .stats-date-control { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 40px; }
+    .date-arrow { background: #9B59B6; color: white; border: none; border-radius: 25px; font-size: 45px; padding: 15px 35px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    .date-arrow:active { transform: scale(0.95); }
+    .stats-date-title { flex: 1; text-align: center; font-size: 38px; color: #9B59B6; font-weight: bold; background: #f0e4f5; padding: 25px 10px; border-radius: 25px; margin: 0;}
+    
     .chart-container { background: #fff; padding: 40px; border-radius: 40px; margin-bottom: 40px; box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
-    
-    /* 統計日期標題 */
-    .stats-date-title { text-align: center; font-size: 36px; color: #9B59B6; font-weight: bold; margin-bottom: 30px; background: #f0e4f5; padding: 15px; border-radius: 20px;}
-    
     .stats-summary { display: flex; justify-content: space-between; margin-bottom: 20px; }
     .stats-summary div { text-align: center; width: 48%; }
     .stats-val { font-size: 65px; font-weight: bold; color: #9B59B6; line-height: 1.2; }
     .stats-title { font-size: 28px; color: #888; margin-top: 10px;}
-    
-    .chart-title { text-align: center; color: #666; margin-top: 0; font-size: 34px; margin-bottom: 30px; }
+    .chart-title { text-align: center; color: #666; margin-top: 0; font-size: 38px; margin-bottom: 40px; }
   </style>
 </head>
 <body>
@@ -102,6 +95,7 @@
           </div>
           <label>金額</label>
           <input type="number" class="s-price" placeholder="輸入金額" inputmode="numeric" oninput="calcTotal()">
+          <div class="subtotal-val">小計: $0</div>
         </div>
       </div>
       <button class="add-row-btn" onclick="addSaleRow()">＋ 新增商品</button>
@@ -114,7 +108,7 @@
       </button>
     </div>
 
-    <!-- 2. 進貨表單 -->
+    <!-- 2. 進貨表單 (進貨無須折扣與小計) -->
     <div class="form-content" id="form-restock">
       <div id="restock-list">
         <div class="item-card restock-item">
@@ -138,24 +132,29 @@
       </button>
     </div>
 
-    <!-- 3. 統計報表表單 (升級版) -->
+    <!-- 3. 統計報表表單 -->
     <div class="form-content" id="form-stats">
       <div class="stats-nav">
-        <button class="stats-btn active" onclick="loadStats('day', this)">日報表</button>
-        <button class="stats-btn" onclick="loadStats('week', this)">週報表</button>
-        <button class="stats-btn" onclick="loadStats('month', this)">月報表</button>
+        <button class="stats-btn active" onclick="changeTimeframe('day', this)">日</button>
+        <button class="stats-btn" onclick="changeTimeframe('week', this)">週</button>
+        <button class="stats-btn" onclick="changeTimeframe('month', this)">月</button>
+        <button class="stats-btn" onclick="changeTimeframe('year', this)">年</button>
+      </div>
+
+      <!-- 切換日期控制區 -->
+      <div class="stats-date-control">
+        <button class="date-arrow" onclick="moveDate(-1)">◀</button>
+        <div class="stats-date-title" id="stats-date-display">載入中...</div>
+        <button class="date-arrow" onclick="moveDate(1)">▶</button>
       </div>
 
       <div class="chart-container">
-        <!-- 顯示動態日期範圍 -->
-        <div class="stats-date-title" id="stats-date-display">載入中...</div>
         <div class="stats-summary">
           <div><div class="stats-val" id="st-revenue">$0</div><div class="stats-title">總營業額</div></div>
           <div><div class="stats-val" id="st-qty">0</div><div class="stats-title">售出總量</div></div>
         </div>
       </div>
 
-      <!-- 新增：橫向百分比圖 -->
       <div class="chart-container">
         <h4 class="chart-title">銷售數量佔比 (%)</h4>
         <canvas id="horizontalBarChart"></canvas>
@@ -167,7 +166,7 @@
       </div>
       
       <div class="chart-container">
-        <h4 class="chart-title">各品項銷售數量 (直條圖)</h4>
+        <h4 class="chart-title">各品項數量 (直條圖)</h4>
         <canvas id="barChart"></canvas>
       </div>
     </div>
@@ -179,8 +178,9 @@
     let globalProducts = []; 
     let pieChartInstance = null;
     let barChartInstance = null;
-    let horizontalBarChartInstance = null; // 新增橫條圖實例
+    let horizontalBarChartInstance = null; 
 
+    // 初始化
     liff.init({ liffId: "2010757215-9etMXJlK" }).then(() => {
       if (liff.isLoggedIn()) { 
         liff.getProfile().then(profile => { 
@@ -192,9 +192,7 @@
 
     function initAppAndFetchProducts() {
       fetch(GAS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        redirect: 'follow',
+        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow',
         body: JSON.stringify({ action: 'initApp', uid: userProfile.userId, empName: userProfile.displayName })
       }).then(res => res.json()).then(res => {
         if (res.status === 'success') {
@@ -225,24 +223,28 @@
     function switchTab(tabName) {
       document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.form-content').forEach(el => el.classList.remove('active'));
-      
       document.getElementById(`tab-${tabName}`).classList.add('active');
       document.getElementById(`form-${tabName}`).classList.add('active');
 
       if(tabName === 'stats') {
-        loadStats('day', document.querySelector('.stats-btn'));
+        changeTimeframe('day', document.querySelector('.stats-btn'));
       }
     }
 
+    // --- 新增單品小計與總額計算 ---
     function addSaleRow() {
-      const html = `<div class="item-card sale-item"><button class="remove-btn" onclick="this.parentElement.remove(); calcTotal();">刪除</button><div class="row"><div class="col-product"><label>商品名稱</label><select class="s-name" onchange="autoFillPrice(this)">${getOptionsHtml()}</select></div><div class="col-qty"><label>數量</label><input type="number" class="s-qty" value="1" inputmode="numeric" oninput="calcTotal()"></div></div><label>金額</label><input type="number" class="s-price" placeholder="輸入單價" inputmode="numeric" oninput="calcTotal()"></div>`;
+      const html = `<div class="item-card sale-item"><button class="remove-btn" onclick="this.parentElement.remove(); calcTotal();">刪除</button><div class="row"><div class="col-product"><label>商品名稱</label><select class="s-name" onchange="autoFillPrice(this)">${getOptionsHtml()}</select></div><div class="col-qty"><label>數量</label><input type="number" class="s-qty" value="1" inputmode="numeric" oninput="calcTotal()"></div></div><label>金額</label><input type="number" class="s-price" placeholder="輸入單價" inputmode="numeric" oninput="calcTotal()"><div class="subtotal-val">小計: $0</div></div>`;
       document.getElementById('sales-list').insertAdjacentHTML('beforeend', html);
     }
 
     function calcTotal() {
       let total = 0;
       document.querySelectorAll('.sale-item').forEach(item => {
-        total += (parseInt(item.querySelector('.s-qty').value) || 0) * (parseInt(item.querySelector('.s-price').value) || 0);
+        let qty = parseInt(item.querySelector('.s-qty').value) || 0;
+        let price = parseInt(item.querySelector('.s-price').value) || 0;
+        let subtotal = qty * price;
+        item.querySelector('.subtotal-val').innerText = `小計: $${subtotal}`; // 動態更新小計
+        total += subtotal;
       });
       total -= (parseInt(document.getElementById('s-discount').value) || 0);
       document.getElementById('sales-total-text').innerText = `結帳 (總計 $${Math.max(0, total)})`;
@@ -293,56 +295,70 @@
       }).then(res => res.json()).then(data => { alert(data.message); liff.closeWindow(); });
     }
 
-    // --- 計算並生成日期字串 ---
-    function getDateRangeString(timeframe) {
-      const now = new Date();
-      const y = now.getFullYear();
-      const m = String(now.getMonth() + 1).padStart(2, '0');
-      const d = String(now.getDate()).padStart(2, '0');
+    // --- 日期導航與統計圖表邏輯 ---
+    let currentNavDate = new Date();
+    let currentTF = 'day';
 
-      if (timeframe === 'day') {
-        return `📅 今日：${y}/${m}/${d}`;
-      } else if (timeframe === 'month') {
-        return `📅 本月：${y}年${m}月`;
-      } else if (timeframe === 'week') {
-        const lastWeek = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000);
-        const ly = lastWeek.getFullYear();
-        const lm = String(lastWeek.getMonth() + 1).padStart(2, '0');
-        const ld = String(lastWeek.getDate()).padStart(2, '0');
-        return `📅 近七日：${ly}/${lm}/${ld} ~ ${m}/${d}`;
-      }
-    }
-
-    // --- 動態生成不重複顏色的演算法 (黃金比例) ---
     function generateDistinctColors(count) {
       let colors = [];
       for (let i = 0; i < count; i++) {
-        // 利用 137.5 度的黃金視角來確保每次生成的色相差最大，絕對不重複
-        const hue = (i * 137.5) % 360; 
-        colors.push(`hsl(${hue}, 70%, 65%)`);
+        colors.push(`hsl(${(i * 137.5) % 360}, 75%, 60%)`);
       }
       return colors;
     }
 
-    // --- 統計報表核心邏輯 ---
-    let currentTimeframe = 'day';
-
-    function loadStats(timeframe, btnElem) {
-      currentTimeframe = timeframe;
+    function changeTimeframe(tf, btnElem) {
+      currentTF = tf;
+      currentNavDate = new Date(); // 切換時預設回到今天
       document.querySelectorAll('.stats-btn').forEach(btn => btn.classList.remove('active'));
       btnElem.classList.add('active');
-      
-      // 更新畫面的日期標題
-      document.getElementById('stats-date-display').innerText = getDateRangeString(timeframe);
+      fetchStatsData();
+    }
+
+    function moveDate(offset) {
+      if (currentTF === 'day') currentNavDate.setDate(currentNavDate.getDate() + offset);
+      else if (currentTF === 'week') currentNavDate.setDate(currentNavDate.getDate() + (offset * 7));
+      else if (currentTF === 'month') currentNavDate.setMonth(currentNavDate.getMonth() + offset);
+      else if (currentTF === 'year') currentNavDate.setFullYear(currentNavDate.getFullYear() + offset);
+      fetchStatsData();
+    }
+
+    function fetchStatsData() {
+      let y = currentNavDate.getFullYear();
+      let m = currentNavDate.getMonth();
+      let d = currentNavDate.getDate();
+      let start, end, displayStr;
+
+      if (currentTF === 'day') {
+        start = new Date(y, m, d, 0, 0, 0).getTime();
+        end = new Date(y, m, d, 23, 59, 59).getTime();
+        displayStr = `${y}/${String(m+1).padStart(2,'0')}/${String(d).padStart(2,'0')}`;
+      } else if (currentTF === 'week') {
+        let dayOfWeek = currentNavDate.getDay() || 7; 
+        let monday = new Date(y, m, d - dayOfWeek + 1);
+        let sunday = new Date(monday.getTime() + 6 * 24 * 60 * 60 * 1000);
+        start = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 0, 0, 0).getTime();
+        end = new Date(sunday.getFullYear(), sunday.getMonth(), sunday.getDate(), 23, 59, 59).getTime();
+        displayStr = `${monday.getMonth()+1}/${monday.getDate()} ~ ${sunday.getMonth()+1}/${sunday.getDate()}`;
+      } else if (currentTF === 'month') {
+        start = new Date(y, m, 1, 0, 0, 0).getTime();
+        let lastDay = new Date(y, m + 1, 0);
+        end = new Date(y, m, lastDay.getDate(), 23, 59, 59).getTime();
+        displayStr = `${y} 年 ${m+1} 月`;
+      } else if (currentTF === 'year') {
+        start = new Date(y, 0, 1, 0, 0, 0).getTime();
+        end = new Date(y, 11, 31, 23, 59, 59).getTime();
+        displayStr = `${y} 年`;
+      }
+
+      document.getElementById('stats-date-display').innerText = displayStr;
       document.getElementById('st-revenue').innerText = "讀取中";
 
       fetch(GAS_URL, {
         method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow',
-        body: JSON.stringify({ action: 'getStats', timeframe: timeframe })
+        body: JSON.stringify({ action: 'getStats', startDate: start, endDate: end })
       }).then(res => res.json()).then(res => {
-        if(res.status === 'success') {
-          renderCharts(res.data);
-        }
+        if(res.status === 'success') renderCharts(res.data);
       });
     }
 
@@ -353,39 +369,26 @@
       let labels = Object.keys(data.products);
       let revenues = labels.map(l => data.products[l].revenue);
       let qtys = labels.map(l => data.products[l].qty);
-
-      // 動態生成顏色 (有幾個商品就生幾種顏色)
       const dynamicColors = generateDistinctColors(labels.length);
 
-      // 銷毀舊圖表避免重疊
       if(pieChartInstance) pieChartInstance.destroy();
       if(barChartInstance) barChartInstance.destroy();
       if(horizontalBarChartInstance) horizontalBarChartInstance.destroy();
 
-      // Chart.js 標籤字體設定 (放大版)
-      const hugeFontConfig = { size: 26, weight: 'bold' };
-      const safeTotalQty = data.totalQty || 1; // 避免除以 0
+      // 圖表文字終極放大設定
+      const hugeFontConfig = { size: 36, weight: 'bold' };
+      const tooltipConfig = { titleFont: { size: 38 }, bodyFont: { size: 36 }, padding: 25 };
+      const safeTotalQty = data.totalQty || 1; 
 
-      // 1. 新增：橫向長條圖 (顯示百分比)
-      const labelsWithPercent = labels.map((l, i) => {
-        let percent = ((qtys[i] / safeTotalQty) * 100).toFixed(1);
-        return `${l} (${percent}%)`;
-      });
-
+      // 1. 橫向百分比圖
+      const labelsWithPercent = labels.map((l, i) => `${l} (${((qtys[i] / safeTotalQty) * 100).toFixed(1)}%)`);
       const ctxHBar = document.getElementById('horizontalBarChart').getContext('2d');
       horizontalBarChartInstance = new Chart(ctxHBar, {
         type: 'bar',
-        data: { 
-          labels: labelsWithPercent, 
-          datasets: [{ 
-            data: qtys.map(q => (q / safeTotalQty * 100).toFixed(1)), 
-            backgroundColor: dynamicColors, 
-            borderRadius: 15 
-          }] 
-        },
+        data: { labels: labelsWithPercent, datasets: [{ data: qtys.map(q => (q / safeTotalQty * 100).toFixed(1)), backgroundColor: dynamicColors, borderRadius: 20 }] },
         options: { 
-          indexAxis: 'y', // 這行是把長條圖變成「橫向」的關鍵
-          plugins: { legend: { display: false } },
+          indexAxis: 'y', 
+          plugins: { legend: { display: false }, tooltip: tooltipConfig },
           scales: { 
             x: { ticks: { font: hugeFontConfig } }, 
             y: { ticks: { font: hugeFontConfig } } 
@@ -393,25 +396,25 @@
         }
       });
 
-      // 2. 圓餅圖 (營業額佔比)
+      // 2. 圓餅圖
       const ctxPie = document.getElementById('pieChart').getContext('2d');
       pieChartInstance = new Chart(ctxPie, {
         type: 'doughnut', 
         data: { labels: labels, datasets: [{ data: revenues, backgroundColor: dynamicColors }] },
-        options: { plugins: { legend: { position: 'bottom', labels: { font: hugeFontConfig, padding: 20 } } } }
+        options: { plugins: { legend: { position: 'bottom', labels: { font: hugeFontConfig, padding: 30 } }, tooltip: tooltipConfig } }
       });
 
-      // 3. 直條圖 (數量統計)
+      // 3. 直條圖
       const ctxBar = document.getElementById('barChart').getContext('2d');
       barChartInstance = new Chart(ctxBar, {
         type: 'bar',
-        data: { labels: labels, datasets: [{ label: '售出數量', data: qtys, backgroundColor: dynamicColors, borderRadius: 15 }] },
+        data: { labels: labels, datasets: [{ label: '售出數量', data: qtys, backgroundColor: dynamicColors, borderRadius: 20 }] },
         options: { 
           scales: { 
             y: { beginAtZero: true, ticks: { stepSize: 1, font: hugeFontConfig } }, 
             x: { ticks: { font: hugeFontConfig } } 
           }, 
-          plugins: { legend: { display: false } } 
+          plugins: { legend: { display: false }, tooltip: tooltipConfig } 
         }
       });
     }
